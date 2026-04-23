@@ -1,20 +1,22 @@
 from pathlib import Path
+from io import BytesIO
 import requests
+import boto3
 
-MOCK_API_URL = "http://127.0.0.1:8000/apple/reports/sales"
-OUTPUT_FILE = Path("data/raw/revenue/apple/sales/report_date=2026-04-20/apple_sales.csv")
+MOCK_API_URL = "http://127.0.0.1:8001/apple/reports/sales"
 
+S3_BUCKET = "mobile-app-analytics-dev-yourname"
+S3_KEY = "raw/revenue/apple/sales/report_date=2026-04-20/apple_sales.csv"
+AWS_REGION = "eu-north-1"
 
 def main():
-    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
-
     response = requests.get(MOCK_API_URL, timeout=60)
     response.raise_for_status()
 
-    OUTPUT_FILE.write_bytes(response.content)
+    s3 = boto3.client("s3", region_name=AWS_REGION)
+    s3.upload_fileobj(BytesIO(response.content), S3_BUCKET, S3_KEY)
 
-    print(f"Saved raw file to: {OUTPUT_FILE}")
-
+    print(f"Uploaded to s3://{S3_BUCKET}/{S3_KEY}")
 
 if __name__ == "__main__":
     main()
