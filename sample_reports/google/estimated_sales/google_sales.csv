@@ -1,0 +1,4 @@
+Order Number,Order Charged Date,Package Name,Product Title,Product Type,Country of Buyer,Currency of Sale,Amount (Buyer Currency),Amount (Merchant Currency)
+GPA.1111-2222-3333-44444,2026-04-05 09:14:22 UTC,com.example.app,Premium Monthly,Subscription,GB,GBP,9.99,9.99
+GPA.5555-6666-7777-88888,2026-04-06 13:05:10 UTC,com.example.app,100 Coins,Inapp,US,USD,4.99,4.99
+GPA.9999-0000-1111-22222,2026-04-06 18:40:55 UTC,com.example.app,Premium Monthly,Subscription,IN,INR,399.00,399.00

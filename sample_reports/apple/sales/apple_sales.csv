@@ -1,0 +1,3 @@
+Provider,Provider Country,SKU,Developer,Title,Version,Product Type Identifier,Units,Developer Proceeds,Begin Date,End Date,Country Code,Currency of Proceeds
+APPLE,US,premium_monthly,Example Dev,Example App,1.0,Auto-Renewable Subscription,12,83.88,2026-04-20,2026-04-20,GB,GBP
+APPLE,US,coins_100,Example Dev,Example App,1.0,In-App Purchase,25,62.25,2026-04-20,2026-04-20,US,USD
