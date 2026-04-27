@@ -1,0 +1,6 @@
+Report Date,Package Name,Country,Crash Rate,ANR Rate
+2026-04-01,com.example.app,US,0.021,0.010
+2026-04-01,com.example.app,GB,0.018,0.008
+2026-04-02,com.example.app,US,0.019,0.009
+2026-04-02,com.example.app,IN,0.024,0.012
+2026-04-03,com.example.app,GB,0.017,0.007

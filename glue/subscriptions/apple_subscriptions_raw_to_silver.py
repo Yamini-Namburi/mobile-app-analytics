@@ -28,17 +28,17 @@ job.init(args["JOB_NAME"], args)
 
 input_path = build_raw_path(
     bucket_name=bucket_name,
-    domain="revenue",
+    domain="subscriptions",
     source_system="apple",
-    report_type="finance",
+    report_type="subscriptions",
     report_month=report_month,
 )
 
 output_path = build_silver_path(
     bucket_name=bucket_name,
-    domain="revenue",
+    domain="subscriptions",
     source_system="apple",
-    report_type="finance",
+    report_type="subscriptions",
 )
 
 df = spark.read.option("header", True).csv(input_path)
@@ -46,45 +46,40 @@ df = spark.read.option("header", True).csv(input_path)
 validate_required_columns(
     df,
     [
-        "Start Date",
-        "End Date",
-        "SKU",
+        "Report Month",
+        "App Name",
+        "Subscription SKU",
         "Country Code",
-        "Currency",
-        "Units",
-        "Customer Price",
+        "Active Subscribers",
+        "New Subscribers",
         "Developer Proceeds",
     ],
-    "apple_finance",
+    "apple_subscriptions",
 )
-validate_not_empty(df, "apple_finance")
+validate_not_empty(df, "apple_subscriptions")
 
 final_df = (
     df
     .withColumn("source_system", lit("apple"))
-    .withColumn("report_type", lit("finance"))
-    .withColumn("report_month", lit(report_month))
-    .withColumn("app_id", lit("example_app"))
-    .withColumn("app_name", lit("Example App"))
-    .withColumn("product_id", col("SKU"))
-    .withColumn("product_name", col("SKU"))
+    .withColumn("report_type", lit("subscriptions"))
+    .withColumn("report_month", col("Report Month"))
+    .withColumn("app_id", col("App Name"))
+    .withColumn("app_name", col("App Name"))
+    .withColumn("subscription_sku", col("Subscription SKU"))
     .withColumn("country_code", col("Country Code"))
-    .withColumn("currency_code", col("Currency"))
-    .withColumn("units", col("Units").cast("int"))
-    .withColumn("gross_amount", col("Customer Price").cast("double"))
-    .withColumn("net_amount", col("Developer Proceeds").cast("double"))
+    .withColumn("active_subscribers", col("Active Subscribers").cast("int"))
+    .withColumn("new_subscribers", col("New Subscribers").cast("int"))
+    .withColumn("developer_proceeds", col("Developer Proceeds").cast("double"))
     .select(
         "report_type",
         "report_month",
         "app_id",
         "app_name",
-        "product_id",
-        "product_name",
+        "subscription_sku",
         "country_code",
-        "currency_code",
-        "units",
-        "gross_amount",
-        "net_amount",
+        "active_subscribers",
+        "new_subscribers",
+        "developer_proceeds",
         "source_system",
     )
 )

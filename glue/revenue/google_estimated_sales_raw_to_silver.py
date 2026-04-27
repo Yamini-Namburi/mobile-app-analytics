@@ -5,15 +5,16 @@ from awsglue.job import Job
 from pyspark.context import SparkContext
 from pyspark.sql.functions import col, lit, substring, to_date, year, month
 
-from utils import validate_required_columns, validate_not_empty, build_raw_path, build_silver_path
+from utils import (
+    validate_required_columns,
+    validate_not_empty,
+    build_raw_path,
+    build_silver_path,
+)
 
 args = getResolvedOptions(
     sys.argv,
-    [
-        "JOB_NAME",
-        "bucket_name",
-        "report_month"
-    ]
+    ["JOB_NAME", "bucket_name", "report_month"]
 )
 
 bucket_name = args["bucket_name"]
@@ -30,14 +31,14 @@ input_path = build_raw_path(
     domain="revenue",
     source_system="google",
     report_type="estimated_sales",
-    report_month=report_month
+    report_month=report_month,
 )
 
 output_path = build_silver_path(
     bucket_name=bucket_name,
     domain="revenue",
     source_system="google",
-    report_type="estimated_sales"
+    report_type="estimated_sales",
 )
 
 df = spark.read.option("header", True).csv(input_path)
@@ -55,7 +56,7 @@ validate_required_columns(
         "Amount (Buyer Currency)",
         "Amount (Merchant Currency)",
     ],
-    "google_estimated_sales"
+    "google_estimated_sales",
 )
 validate_not_empty(df, "google_estimated_sales")
 
@@ -89,7 +90,7 @@ final_df = (
         "net_amount",
         "source_system",
         "year",
-        "month"
+        "month",
     )
 )
 

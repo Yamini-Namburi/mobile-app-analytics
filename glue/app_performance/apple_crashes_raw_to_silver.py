@@ -28,70 +28,46 @@ job.init(args["JOB_NAME"], args)
 
 input_path = build_raw_path(
     bucket_name=bucket_name,
-    domain="revenue",
+    domain="app_performance",
     source_system="apple",
-    report_type="sales",
+    report_type="crashes",
     report_month=report_month,
 )
 
 output_path = build_silver_path(
     bucket_name=bucket_name,
-    domain="revenue",
+    domain="app_performance",
     source_system="apple",
-    report_type="sales",
+    report_type="crashes",
 )
 
 df = spark.read.option("header", True).csv(input_path)
 
 validate_required_columns(
     df,
-    [
-        "Provider",
-        "Provider Country",
-        "SKU",
-        "Developer",
-        "Title",
-        "Version",
-        "Product Type Identifier",
-        "Units",
-        "Developer Proceeds",
-        "Begin Date",
-        "End Date",
-        "Country Code",
-        "Currency of Proceeds",
-    ],
-    "apple_sales",
+    ["Report Date", "App Name", "Country Code", "Crash Rate"],
+    "apple_crashes",
 )
-validate_not_empty(df, "apple_sales")
+validate_not_empty(df, "apple_crashes")
 
 final_df = (
     df
     .withColumn("source_system", lit("apple"))
-    .withColumn("report_type", lit("sales"))
-    .withColumn("app_id", col("Title"))
-    .withColumn("app_name", col("Title"))
-    .withColumn("product_id", col("SKU"))
-    .withColumn("product_name", col("SKU"))
-    .withColumn("transaction_date", to_date(col("Begin Date"), "yyyy-MM-dd"))
+    .withColumn("report_type", lit("crashes"))
+    .withColumn("app_id", col("App Name"))
+    .withColumn("app_name", col("App Name"))
+    .withColumn("metric_date", to_date(col("Report Date"), "yyyy-MM-dd"))
     .withColumn("country_code", col("Country Code"))
-    .withColumn("currency_code", col("Currency of Proceeds"))
-    .withColumn("units", col("Units").cast("int"))
-    .withColumn("gross_amount", lit(None).cast("double"))
-    .withColumn("net_amount", col("Developer Proceeds").cast("double"))
-    .withColumn("year", year(col("transaction_date")))
-    .withColumn("month", month(col("transaction_date")))
+    .withColumn("crash_rate", col("Crash Rate").cast("double"))
+    .withColumn("year", year(col("metric_date")))
+    .withColumn("month", month(col("metric_date")))
     .select(
         "report_type",
         "app_id",
         "app_name",
-        "product_id",
-        "product_name",
-        "transaction_date",
+        "metric_date",
         "country_code",
-        "currency_code",
-        "units",
-        "gross_amount",
-        "net_amount",
+        "crash_rate",
         "source_system",
         "year",
         "month",

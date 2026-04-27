@@ -1,0 +1,6 @@
+Report Month,Package Name,Subscription SKU,Country,Active Subscribers,New Subscribers,Revenue
+202604,com.example.app,premium_monthly,US,420,35,1890.50
+202604,com.example.app,premium_monthly,GB,140,12,525.20
+202604,com.example.app,premium_yearly,US,80,6,2999.99
+202604,com.example.app,premium_monthly,IN,210,24,410.75
+202604,com.example.app,premium_yearly,GB,25,2,899.50

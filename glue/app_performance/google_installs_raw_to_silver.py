@@ -28,66 +28,46 @@ job.init(args["JOB_NAME"], args)
 
 input_path = build_raw_path(
     bucket_name=bucket_name,
-    domain="revenue",
+    domain="app_performance",
     source_system="google",
-    report_type="earnings",
+    report_type="installs",
     report_month=report_month,
 )
 
 output_path = build_silver_path(
     bucket_name=bucket_name,
-    domain="revenue",
+    domain="app_performance",
     source_system="google",
-    report_type="earnings",
+    report_type="installs",
 )
 
 df = spark.read.option("header", True).csv(input_path)
 
 validate_required_columns(
     df,
-    [
-        "Transaction Date",
-        "Package Name",
-        "Description",
-        "Transaction Type",
-        "Country of Sale",
-        "Buyer Currency",
-        "Buyer Amount",
-        "Merchant Currency",
-        "Merchant Amount",
-    ],
-    "google_earnings",
+    ["Report Date", "Package Name", "Country", "Installs"],
+    "google_installs",
 )
-validate_not_empty(df, "google_earnings")
+validate_not_empty(df, "google_installs")
 
 final_df = (
     df
     .withColumn("source_system", lit("google"))
-    .withColumn("report_type", lit("earnings"))
+    .withColumn("report_type", lit("installs"))
     .withColumn("app_id", col("Package Name"))
     .withColumn("app_name", col("Package Name"))
-    .withColumn("product_id", col("Description"))
-    .withColumn("product_name", col("Description"))
-    .withColumn("transaction_date", to_date(col("Transaction Date"), "yyyy-MM-dd"))
-    .withColumn("country_code", col("Country of Sale"))
-    .withColumn("currency_code", col("Buyer Currency"))
-    .withColumn("units", lit(1).cast("int"))
-    .withColumn("gross_amount", col("Buyer Amount").cast("double"))
-    .withColumn("net_amount", col("Merchant Amount").cast("double"))
+    .withColumn("transaction_date", to_date(col("Report Date"), "yyyy-MM-dd"))
+    .withColumn("country_code", col("Country"))
+    .withColumn("installs", col("Installs").cast("int"))
     .withColumn("year", year(col("transaction_date")))
     .withColumn("month", month(col("transaction_date")))
     .select(
         "report_type",
         "app_id",
         "app_name",
-        "product_id",
-        "product_name",
         "transaction_date",
         "country_code",
-        "currency_code",
-        "units",
-        "gross_amount",
-        "net_amount",
+        "installs",
         "source_system",
         "year",
         "month",
