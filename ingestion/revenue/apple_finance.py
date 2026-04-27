@@ -1,12 +1,11 @@
-from pathlib import Path
 from io import BytesIO
 import requests
 import boto3
 
-MOCK_API_URL = "http://127.0.0.1:8001/apple/reports/sales"
+MOCK_API_URL = "http://127.0.0.1:8001/apple/reports/finance"
 
 S3_BUCKET = "mobile-app-analytics-dev-yourname"
-S3_KEY = "raw/revenue/apple/sales/report_date=2026-04-20/apple_sales.csv"
+S3_KEY = "raw/revenue/apple/finance/report_month=2026-03/apple_finance_202603"
 AWS_REGION = "eu-north-1"
 
 def main():
