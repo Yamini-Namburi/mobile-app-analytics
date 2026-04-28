@@ -3,7 +3,7 @@ from io import BytesIO
 import boto3
 import requests
 
-MOCK_API_URL = "http://127.0.0.1:8001/google/reports/crashes"
+MOCK_API_URL = "http://host.docker.internal:8001/google/reports/crashes"
 
 S3_BUCKET = "mobile-app-analytics-dev-yourname"
 S3_KEY = "raw/app_performance/google/crashes/report_month=202604/google_crashes_202604.csv"

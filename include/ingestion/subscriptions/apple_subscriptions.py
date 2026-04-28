@@ -3,7 +3,7 @@ from io import BytesIO
 import boto3
 import requests
 
-MOCK_API_URL = "http://127.0.0.1:8001/apple/reports/subscriptions"
+MOCK_API_URL = "http://host.docker.internal:8001/apple/reports/subscriptions"
 
 S3_BUCKET = "mobile-app-analytics-dev-yourname"
 S3_KEY = "raw/subscriptions/apple/subscriptions/report_month=202604/apple_subscriptions_202604.csv"
