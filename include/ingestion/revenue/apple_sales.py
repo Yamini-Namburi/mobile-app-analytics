@@ -2,11 +2,12 @@ from io import BytesIO
 import requests
 import boto3
 
-MOCK_API_URL = "http://127.0.0.1:8001/apple/reports/finance"
+MOCK_API_URL = "http://host.docker.internal:8001/apple/reports/sales"
 
 S3_BUCKET = "mobile-app-analytics-dev-yourname"
-S3_KEY = "raw/revenue/apple/finance/report_month=2026-03/apple_finance_202603"
+S3_KEY = "raw/revenue/apple/sales/report_month=202604/apple_sales_202604.csv"
 AWS_REGION = "eu-north-1"
+
 
 def main():
     response = requests.get(MOCK_API_URL, timeout=60)
@@ -16,6 +17,7 @@ def main():
     s3.upload_fileobj(BytesIO(response.content), S3_BUCKET, S3_KEY)
 
     print(f"Uploaded to s3://{S3_BUCKET}/{S3_KEY}")
+
 
 if __name__ == "__main__":
     main()

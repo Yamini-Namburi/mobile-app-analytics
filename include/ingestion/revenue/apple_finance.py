@@ -2,10 +2,10 @@ from io import BytesIO
 import requests
 import boto3
 
-MOCK_API_URL = "http://127.0.0.1:8001/google/reports/estimated-sales"
+MOCK_API_URL = "http://host.docker.internal:8001/apple/reports/finance"
 
 S3_BUCKET = "mobile-app-analytics-dev-yourname"
-S3_KEY = "raw/revenue/google/estimated_sales/report_month=202604/google_sales_202604.csv"
+S3_KEY = "raw/revenue/apple/finance/report_month=2026-03/apple_finance_202603.csv"
 AWS_REGION = "eu-north-1"
 
 
