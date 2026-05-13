@@ -1,8 +1,10 @@
 from datetime import datetime
+import importlib
+import sys
 
 from airflow import DAG
 from airflow.operators.empty import EmptyOperator
-from airflow.operators.bash import BashOperator
+from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.operators.glue import GlueJobOperator
 
 
@@ -14,116 +16,76 @@ AWS_REGION = "eu-north-1"
 
 REPORT_MONTH = "202604"
 
+SOURCE_SYSTEMS = ["google", "apple"]
+REPORT_TYPES = ["installs", "crashes"]
+
 default_args = {
     "owner": "yamini",
 }
 
 
+def run_ingestion_script(module_path: str):
+    """
+    Dynamically import an ingestion module and run its main() function.
+    Example module_path:
+    include.ingestion.app_performance.apple_crashes
+    """
+
+    if PROJECT_DIR not in sys.path:
+        sys.path.append(PROJECT_DIR)
+
+    module = importlib.import_module(module_path)
+
+    if not hasattr(module, "main"):
+        raise AttributeError(f"{module_path} does not have a main() function")
+
+    module.main()
+
+
 with DAG(
-    dag_id="dag_app_performance_pipeline",
+    dag_id="dag_app_performance_pipeline_python_operator",
     default_args=default_args,
-    description="App performance pipeline: mock API -> raw S3 -> Glue -> silver S3",
+    description="App performance pipeline using PythonOperator",
     start_date=datetime(2026, 4, 28),
     schedule=None,
     catchup=False,
-    tags=["mobile-app-analytics", "app-performance"],
+    tags=["mobile-app-analytics", "app-performance", "python-operator"],
 ) as dag:
 
     start = EmptyOperator(task_id="start")
     end = EmptyOperator(task_id="end")
 
-    google_installs_ingest = BashOperator(
-        task_id="google_installs_ingest",
-        bash_command=f"""
-        set -e
-        cd {PROJECT_DIR}
-        python include/ingestion/app_performance/google_installs.py
-        """,
-    )
+    for source_system in SOURCE_SYSTEMS:
+        for report_type in REPORT_TYPES:
 
-    google_crashes_ingest = BashOperator(
-        task_id="google_crashes_ingest",
-        bash_command=f"""
-        set -e
-        cd {PROJECT_DIR}
-        python include/ingestion/app_performance/google_crashes.py
-        """,
-    )
+            ingest_task_id = f"{source_system}_{report_type}_ingest"
+            glue_task_id = f"{source_system}_{report_type}_raw_to_silver"
 
-    apple_installs_ingest = BashOperator(
-        task_id="apple_installs_ingest",
-        bash_command=f"""
-        set -e
-        cd {PROJECT_DIR}
-        python include/ingestion/app_performance/apple_installs.py
-        """,
-    )
+            module_path = (
+                f"include.ingestion.app_performance."
+                f"{source_system}_{report_type}"
+            )
 
-    apple_crashes_ingest = BashOperator(
-        task_id="apple_crashes_ingest",
-        bash_command=f"""
-        set -e
-        cd {PROJECT_DIR}
-        python include/ingestion/app_performance/apple_crashes.py
-        """,
-    )
+            glue_job_name = f"{source_system}_{report_type}_raw_to_silver"
 
-    google_installs_glue = GlueJobOperator(
-        task_id="google_installs_raw_to_silver",
-        job_name="google_installs_raw_to_silver",
-        script_args={
-            "--bucket_name": BUCKET_NAME,
-            "--report_month": REPORT_MONTH,
-        },
-        aws_conn_id=AWS_CONN_ID,
-        region_name=AWS_REGION,
-        wait_for_completion=True,
-    )
+            ingestion_task = PythonOperator(
+                task_id=ingest_task_id,
+                python_callable=run_ingestion_script,
+                op_kwargs={
+                    "module_path": module_path,
+                },
+            )
 
-    google_crashes_glue = GlueJobOperator(
-        task_id="google_crashes_raw_to_silver",
-        job_name="google_crashes_raw_to_silver",
-        script_args={
-            "--bucket_name": BUCKET_NAME,
-            "--report_month": REPORT_MONTH,
-        },
-        aws_conn_id=AWS_CONN_ID,
-        region_name=AWS_REGION,
-        wait_for_completion=True,
-    )
+            glue_task = GlueJobOperator(
+                task_id=glue_task_id,
+                job_name=glue_job_name,
+                script_args={
+                    "--bucket_name": BUCKET_NAME,
+                    "--report_month": REPORT_MONTH,
+                },
+                aws_conn_id=AWS_CONN_ID,
+                region_name=AWS_REGION,
+                wait_for_completion=True,
+            )
 
-    apple_installs_glue = GlueJobOperator(
-        task_id="apple_installs_raw_to_silver",
-        job_name="apple_installs_raw_to_silver",
-        script_args={
-            "--bucket_name": BUCKET_NAME,
-            "--report_month": REPORT_MONTH,
-        },
-        aws_conn_id=AWS_CONN_ID,
-        region_name=AWS_REGION,
-        wait_for_completion=True,
-    )
-
-    apple_crashes_glue = GlueJobOperator(
-        task_id="apple_crashes_raw_to_silver",
-        job_name="apple_crashes_raw_to_silver",
-        script_args={
-            "--bucket_name": BUCKET_NAME,
-            "--report_month": REPORT_MONTH,
-        },
-        aws_conn_id=AWS_CONN_ID,
-        region_name=AWS_REGION,
-        wait_for_completion=True,
-    )
-
-    start >> [
-        google_installs_ingest,
-        google_crashes_ingest,
-        apple_installs_ingest,
-        apple_crashes_ingest,
-    ]
-
-    google_installs_ingest >> google_installs_glue >> end
-    google_crashes_ingest >> google_crashes_glue >> end
-    apple_installs_ingest >> apple_installs_glue >> end
-    apple_crashes_ingest >> apple_crashes_glue >> end
+            start >> ingestion_task >> glue_task >> end
